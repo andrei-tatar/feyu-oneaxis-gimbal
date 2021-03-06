@@ -15,8 +15,7 @@ private:
 public:
     SpiDriver(SPI_TypeDef *instance, GpioDriver &cs);
     void begin();
-    void transfer(uint16_t *data, uint16_t size);
-    uint16_t transferSingle(uint16_t data);
+    void transfer(uint8_t *data, uint16_t size);
 };
 
 extern SpiDriver Spi_Hall, Spi_Imu;

@@ -43,7 +43,7 @@ void SpiDriver::begin()
 
     spi.Init.CLKPolarity = SPI_POLARITY_HIGH;
     spi.Init.CLKPhase = SPI_PHASE_2EDGE;
-    spi.Init.DataSize = SPI_DATASIZE_16BIT;
+    spi.Init.DataSize = SPI_DATASIZE_8BIT;
     spi.Init.Direction = SPI_DIRECTION_2LINES;
     spi.Init.Mode = SPI_MODE_MASTER;
     spi.Init.NSS = SPI_NSS_SOFT;
@@ -54,18 +54,9 @@ void SpiDriver::begin()
     HAL_SPI_Init(&spi);
 }
 
-void SpiDriver::transfer(uint16_t *data, uint16_t size)
+void SpiDriver::transfer(uint8_t *data, uint16_t size)
 {
     cs.reset();
-    HAL_SPI_TransmitReceive(&spi, (uint8_t *)data, (uint8_t *)data, size, 1000);
+    HAL_SPI_TransmitReceive(&spi, data, data, size, 1000);
     cs.set();
-}
-
-uint16_t SpiDriver::transferSingle(uint16_t data)
-{
-    uint16_t rxData;
-    cs.reset();
-    HAL_SPI_TransmitReceive(&spi, (uint8_t *)&data, (uint8_t *)&rxData, 1, 1000);
-    cs.set();
-    return rxData;
 }
