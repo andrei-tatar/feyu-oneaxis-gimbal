@@ -26,23 +26,34 @@ void SerialDriver::begin(uint32_t baud)
     // rx.Pull = GPIO_PULLUP;
     // HAL_GPIO_Init(GPIOB, &rx);
 
-    usart.Instance = USART1;
-    usart.Init.BaudRate = baud;
-    usart.Init.WordLength = USART_WORDLENGTH_8B;
-    usart.Init.StopBits = USART_STOPBITS_1;
-    usart.Init.Parity = USART_PARITY_NONE;
-    usart.Init.Mode = USART_MODE_TX;
-    HAL_USART_Init(&usart);
+    handle.Instance = USART1;
+    handle.Init.BaudRate = baud;
+    handle.Init.WordLength = USART_WORDLENGTH_8B;
+    handle.Init.StopBits = USART_STOPBITS_1;
+    handle.Init.Parity = USART_PARITY_NONE;
+    handle.Init.Mode = USART_MODE_TX;
+    HAL_USART_Init(&handle);
+
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
 }
 
 void SerialDriver::print(const char *msg)
 {
-    HAL_USART_Transmit(&usart, (uint8_t *)msg, strlen(msg), 1000);
+    while (handle.State != HAL_USART_STATE_READY)
+    {
+        //wait previous tx to finish
+    }
+
+    uint16_t size = strlen(msg);
+    if (size > sizeof(txBuffer))
+        size = sizeof(txBuffer);
+    memcpy(txBuffer, msg, size);
+    HAL_USART_Transmit_IT(&handle, txBuffer, size);
 }
 
 void SerialDriver::printf(const char *fmt, ...)
 {
-    char buffer[512];
+    char buffer[256];
 
     va_list args;
     va_start(args, fmt);
@@ -50,4 +61,9 @@ void SerialDriver::printf(const char *fmt, ...)
     va_end(args);
 
     print(buffer);
+}
+
+extern "C" void USART1_IRQHandler(void)
+{
+    HAL_USART_IRQHandler(&Serial.handle);
 }

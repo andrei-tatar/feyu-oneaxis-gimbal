@@ -7,12 +7,13 @@
 class SerialDriver
 {
 private:
-    USART_HandleTypeDef usart;
+    uint8_t txBuffer[256];
 
 public:
-    void begin(uint32_t baud = 9600);
+    void begin(uint32_t baud = 115200);
     void print(const char *msg);
     void printf(const char *fmt, ...);
+    USART_HandleTypeDef handle;
 };
 
 extern SerialDriver Serial;
