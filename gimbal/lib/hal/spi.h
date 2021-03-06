@@ -15,6 +15,8 @@ private:
 public:
     SpiDriver(SPI_TypeDef *instance, GpioDriver &cs);
     void begin();
+    inline void select() { cs.reset(); }
+    inline void release() { cs.set(); }
     void transfer(uint8_t *data, uint16_t size);
 };
 

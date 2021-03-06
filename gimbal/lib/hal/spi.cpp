@@ -56,7 +56,5 @@ void SpiDriver::begin()
 
 void SpiDriver::transfer(uint8_t *data, uint16_t size)
 {
-    cs.reset();
     HAL_SPI_TransmitReceive(&spi, data, data, size, 1000);
-    cs.set();
 }
