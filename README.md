@@ -7,7 +7,7 @@ The goal of this project is to convert a WG2X 3 axis gimbal to a single axis gim
 I was only interested in the WG2X_C_v1.PcbDoc PCB, but the other 2 axis are very similar.
 
 - MCU: **STM32F303CCT6** (72MHz, 256KB Flash, 40KB RAM)
-    - 3V, 12MHz crystal
+  - 3V, 12MHz crystal
 - BLDC controller: **AM2827**
   - STDBYA -> PB14
   - STDBYB -> PB15
@@ -28,6 +28,8 @@ I was only interested in the WG2X_C_v1.PcbDoc PCB, but the other 2 axis are very
 - SD06 opamp for current measurement
   - OUTA connected to PA0 (via 100 ohm)
   - OUTB connected to PA4 (via 100 ohm)
+- Motor
+  - 3 Phase **stepper** motor
 
 ## Firmware
 In progress. PlatformIO.

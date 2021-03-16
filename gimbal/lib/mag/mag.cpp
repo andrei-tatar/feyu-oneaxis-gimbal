@@ -14,3 +14,8 @@ double MagAlpha::readAngle()
     angle = angle * 360 / 65535;
     return angle;
 }
+
+void MagAlpha::begin()
+{
+    spi.begin();
+}

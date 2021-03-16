@@ -19,8 +19,6 @@ void init()
     __HAL_RCC_GPIOB_CLK_ENABLE();
 
     Serial.begin();
-    Spi_Hall.begin();
-    Spi_Imu.begin();
 }
 
 extern "C" void SysTick_Handler(void)

@@ -37,6 +37,8 @@ MPU6500::MPU6500(SpiDriver &bus) : _spi(bus)
 /* starts communication with the MPU */
 int MPU6500::begin()
 {
+    _spi.begin();
+
     while (true)
     {
         int res = whoAmI();

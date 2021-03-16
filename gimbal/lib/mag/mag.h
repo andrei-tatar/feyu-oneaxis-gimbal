@@ -11,6 +11,7 @@ private:
 public:
     MagAlpha(SpiDriver &spi);
 
+    void begin();
     double readAngle();
 };
 
