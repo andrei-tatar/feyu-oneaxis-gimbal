@@ -66,7 +66,7 @@ void Motor::update()
     static uint32_t step = 0;
     if (now >= next)
     {
-        next = now + 1;
+        next = now + 3;
 
         step++;
         if (step == 768)
@@ -79,27 +79,13 @@ void Motor::update()
 
         float power = .2;
 
-        float a = cosf(angle) * 255.0 * power + 127 * (1 - power);
-        float b = sinf(angle) * 255.0 * power + 127 * (1 - power);
-        float c = 1 * power + 127 * (1 - power);
+        uint8_t phases[3] = {
+            cosf(angle) * 255.0 * power + 127 * (1 - power),
+            sinf(angle) * 255.0 * power + 127 * (1 - power),
+            1 * power + 127 * (1 - power)};
 
-        if (phase == 0)
-        {
-            __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, a);
-            __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_2, b);
-            __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_3, c);
-        }
-        else if (phase == 1)
-        {
-            __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, c);
-            __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_2, a);
-            __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_3, b);
-        }
-        else if (phase == 2)
-        {
-            __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, b);
-            __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_2, c);
-            __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_3, a);
-        }
+        __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, phases[(0 + phase) % 3]);
+        __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_2, phases[(1 + phase) % 3]);
+        __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_3, phases[(2 + phase) % 3]);
     }
 }
