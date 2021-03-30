@@ -20,8 +20,9 @@ int main(void)
     // uint16_t readsPerSec = 0;
     // uint32_t next = 0;
 
-    Motor motor;
+    Motor motor(mag);
     motor.begin();
+    // motor.calibrate();
 
     while (1)
     {

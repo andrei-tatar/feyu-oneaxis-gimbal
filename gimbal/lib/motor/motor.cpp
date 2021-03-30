@@ -1,6 +1,11 @@
 #include "motor.h"
 #include "stm32f3xx_hal_tim_ex.h"
 #include <math.h>
+#include "serial.h"
+
+Motor::Motor(MagAlpha &mag) : mag(mag)
+{
+}
 
 void Motor::begin()
 {
@@ -58,34 +63,123 @@ void Motor::begin()
     HAL_TIMEx_PWMN_Start(&timer, TIM_CHANNEL_3);
 }
 
-void Motor::update()
+void Motor::calibrate()
 {
-    uint32_t now = HAL_GetTick();
+    uint16_t step = 0;
 
-    static uint32_t next = 0;
-    static uint32_t step = 0;
-    if (now >= next)
+    float startAngle = -1;
+
+    while (true)
     {
-        next = now + 3;
+        setStep(step, .3);
+        HAL_Delay(5);
+
+        auto angle = mag.readAngle();
+
+        //TODO: store in some other array and sort
+        if (step == 0)
+        {
+            Serial.printf("deg %f:\n", angle);
+            zeroAngles[zeroAnglesLength++] = angle;
+            if (startAngle == -1)
+            {
+                startAngle = angle;
+            }
+            else
+            {
+                if (abs(startAngle - angle) < 5)
+                {
+                    zeroAnglesLength--;
+                    Serial.printf("count %d: ", zeroAnglesLength);
+                    for (uint8_t i = 0; i < zeroAnglesLength; i++)
+                    {
+                        Serial.printf("%f ", zeroAngles[i]);
+                    }
+                    Serial.printf("\n");
+                    return;
+                }
+            }
+        }
 
         step++;
         if (step == 768)
         {
             step = 0;
         }
-
-        uint32_t phase = step / 256;
-        float angle = ((step % 256) / 256.0) * M_PI / 2;
-
-        float power = .2;
-
-        uint8_t phases[3] = {
-            cosf(angle) * 255.0 * power + 127 * (1 - power),
-            sinf(angle) * 255.0 * power + 127 * (1 - power),
-            1 * power + 127 * (1 - power)};
-
-        __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, phases[(0 + phase) % 3]);
-        __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_2, phases[(1 + phase) % 3]);
-        __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_3, phases[(2 + phase) % 3]);
     }
+}
+
+void Motor::update()
+{
+    uint32_t now = HAL_GetTick();
+    static uint32_t next = 0;
+    if (now >= next)
+    {
+        next = now + 1;
+
+        float angle = mag.readAngle() - offset;
+        if (angle < 0)
+        {
+            angle += 360;
+        }
+
+        float error = targetAngle - angle;
+        if (error > 180)
+        {
+            error -= 360;
+        }
+        else if (error < -180)
+        {
+            error += 360;
+        }
+
+        if (error > 10)
+        {
+            error = 10;
+        }
+        else if (error < -10)
+        {
+            error = -10;
+        }
+
+        float test = angle + error;
+        float highAngle = 360, lowAngle;
+        for (uint8_t i = zeroAnglesLength - 1; i >= 0; i--)
+        {
+            if (test >= zeroAngles[i])
+            {
+                lowAngle = zeroAngles[i];
+                break;
+            }
+            else
+            {
+                highAngle = zeroAngles[i];
+            }
+        }
+
+        uint16_t step = (test - lowAngle) / (highAngle - lowAngle) * 767;
+        // Serial.printf("a:%f, t:%f, e:%f, s:%d - l: %f, h: %f\n", angle, targetAngle, error, step, lowAngle, highAngle);
+        setStep(step, abs(error / 20));
+    }
+}
+
+void Motor::setStep(uint16_t step, float power)
+{
+    uint8_t phase = (step / 256) % 3;
+    float angle = ((step % 256) / 255.0) * M_PI / 2;
+
+    uint8_t phases[3] = {
+        (uint8_t)(cosf(angle) * 255.0 * power + 127 * (1 - power)),
+        (uint8_t)(127 * (1 - power)),
+        (uint8_t)(sinf(angle) * 255.0 * power + 127 * (1 - power)),
+    };
+
+    __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_1, phases[(0 + phase) % 3]);
+    __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_2, phases[(1 + phase) % 3]);
+    __HAL_TIM_SET_COMPARE(&timer, TIM_CHANNEL_3, phases[(2 + phase) % 3]);
+}
+
+void Motor::setTarget(float angle)
+{
+    targetAngle = angle;
 }

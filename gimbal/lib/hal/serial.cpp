@@ -39,7 +39,7 @@ void SerialDriver::begin(uint32_t baud)
 
 void SerialDriver::print(const char *msg)
 {
-    while (handle.State != HAL_USART_STATE_READY)
+    while (handle.State == HAL_USART_STATE_BUSY_TX)
     {
         //wait previous tx to finish
     }
